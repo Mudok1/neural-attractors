@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Attractors - AI Controlled Chaos</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        #container {
+            width: 100vw;
+            height: 100vh;
+        }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="info">
+            <h1>Neural Attractors v0.1</h1>
+            <p>AI-Controlled Chaotic Systems</p>
+        </div>
+    </div>
+    
+    <script src="src/math/lorenz.js"></script>
+    <script src="src/visuals/renderer.js"></script>
+    <script src="src/main.js"></script>
+</body>
+</html>
