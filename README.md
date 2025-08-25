@@ -1,2 +1,2 @@
 # neural-attractors
-wip
+AI-controlled chaotic attractors with real-time 3D visualization
