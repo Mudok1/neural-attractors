@@ -45,7 +45,7 @@ class LorenzAttractor {
             const point = this.step();
             points.push(point);
         }
-        
+
         return points;
     }
     

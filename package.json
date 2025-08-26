@@ -4,21 +4,24 @@
     "description": "AI-controlled chaotic attractors with real-time 3D visualization",
     "main": "index.html",
     "scripts": {
-      "dev": "live-server",
-      "test": "echo \"No tests yet\" && exit 0"
+        "dev": "live-server",
+        "test": "echo \"No tests yet\" && exit 0"
     },
     "keywords": [
-      "ai",
-      "chaos-theory",
-      "attractors",
-      "visualization",
-      "neural-networks",
-      "three-js",
-      "tensorflow-js"
+        "ai",
+        "chaos-theory",
+        "attractors",
+        "visualization",
+        "neural-networks",
+        "three-js",
+        "tensorflow-js"
     ],
     "author": "Tu Nombre",
     "license": "MIT",
     "devDependencies": {
-      "live-server": "^1.2.2"
+        "live-server": "^1.2.0"
+    },
+    "dependencies": {
+        "three": "^0.179.1"
     }
-  }
+}

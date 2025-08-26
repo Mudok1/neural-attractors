@@ -5,14 +5,14 @@
 class NeuralAttractorsApp {
     constructor() {
         this.lorenz = new LorenzAttractor();
-        this.renderer = new SimpleRenderer('container');
+        this.renderer = new Canvas2DRenderer('container');
         this.isRunning = false;
         
         this.init();
     }
     
     init() {
-        console.log('🚀 Neural Attractors v0.1 - Initializing...');
+        console.log('Neural Attractors v0.1 - Initializing...');
         
         this.lorenz.generatePoints(100);
         
@@ -22,7 +22,7 @@ class NeuralAttractorsApp {
     start() {
         this.isRunning = true;
         this.animate();
-        console.log('✅ Simulation started');
+        console.log('Simulation started');
     }
     
     animate() {
@@ -39,7 +39,7 @@ class NeuralAttractorsApp {
     
     stop() {
         this.isRunning = false;
-        console.log('⏹️ Simulation stopped');
+        console.log('Simulation stopped');
     }
 }
 

@@ -3,7 +3,7 @@
  * (Temporary until we add Three.js)
  */
 
-class SimpleRenderer {
+class Canvas2DRenderer {
     constructor(containerId) {
         this.container = document.getElementById(containerId);
         this.canvas = document.createElement('canvas');
