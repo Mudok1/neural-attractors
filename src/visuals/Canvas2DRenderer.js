@@ -3,6 +3,8 @@
  * (Temporary until we add Three.js)
  */
 
+
+
 class Canvas2DRenderer {
     constructor(containerId) {
         this.container = document.getElementById(containerId);
@@ -75,3 +77,5 @@ class Canvas2DRenderer {
         }
     }
 }
+
+export default Canvas2DRenderer;

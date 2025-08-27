@@ -56,3 +56,5 @@ class LorenzAttractor {
         this.z = z;
     }
 }
+
+export default LorenzAttractor;
