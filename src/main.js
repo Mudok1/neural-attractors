@@ -21,13 +21,40 @@ class NeuralAttractorsApp {
         console.log('Neural Attractors v0.2 - Initializing...');
         
         this.lorenz.generatePoints(100);
+
+        if (this.renderer.rendererType == "3D") {
+            this.initPoints = this.lorenz.generatePoints(700);
+            this.renderer.calculateBoundsFromArray(this.initPoints);
+
+            this.initPointIndex = 0
+            this.animateInitialPoints()
+        }
+
+        else {
+            this.start();
+        }
+
+    }
+
+    animateInitialPoints() {
         
-        this.start();
+        if (this.initPointIndex < this.initPoints.length) {
+            const point = this.initPoints[this.initPointIndex];
+            this.renderer.addPoint(point);
+            this.renderer.render();
+            this.initPointIndex++;
+            
+            requestAnimationFrame(() => this.animateInitialPoints());
+        } else {
+            // Transición suave a animación normal
+            console.log('Transitioning to live generation...');
+            this.start();
+        }
     }
     
     start() {
         this.isRunning = true;
-        console.log('Simulation started');
+        console.log('Simulation started'); 
         this.animate();
     }
     
@@ -35,8 +62,6 @@ class NeuralAttractorsApp {
         if (!this.isRunning) return;
         
         const newPoint = this.lorenz.step();
-
-        
         
         this.renderer.addPoint(newPoint);
         
