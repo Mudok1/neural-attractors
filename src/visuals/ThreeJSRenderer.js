@@ -1,5 +1,9 @@
 import * as THREE from "three"
 import { OrbitControls } from "three/examples/jsm/Addons.js";
+import { Line2 } from 'three/addons/lines/Line2.js';
+import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
+import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
+import { array } from "three/tsl";
 
 class ThreeJSRenderer {
     constructor(containerId) {
@@ -18,13 +22,13 @@ class ThreeJSRenderer {
 
         this.points = [];
         this.maxPoints = 8000;
+        this.lastPointCount = 0
 
         // variables Autocentrado
         this.minBounds = new THREE.Vector3(Infinity, Infinity, Infinity);
         this.maxBounds = new THREE.Vector3(-Infinity, -Infinity, -Infinity);
         this.centerOffset = new THREE.Vector3(0, 0, 0);
         this.boundsCalculated = false;
-
 
         this.setupScene();
         this.setupOrbitControls()
@@ -40,26 +44,32 @@ class ThreeJSRenderer {
         this.camera.lookAt(0, 0, 0);
 
         // Ejes
-        const axesHelper = new THREE.AxesHelper(15);
-        this.scene.add(axesHelper);
-
         // Puntos
-        this.pointsGeometry = new THREE.BufferGeometry();
-        this.pointsMaterial = new THREE.PointsMaterial({
-            size: 0.05,
-            vertexColors: false,
-            color: 0xff0000
+        // this.pointsGeometry = new THREE.BufferGeometry();
+        // this.pointsMaterial = new THREE.PointsMaterial({
+        //     size: 0.05,
+        //     vertexColors: false,
+        //     color: 0xff0000
+        // });
+
+        this.linesGeometry = new LineGeometry();
+        this.linesMaterial = new LineMaterial({
+            color: 0xffffff,
+            linewidth: 1,
+            //vertexColors: true,
+            transparent: true,
+            opacity: 1,
+            blending: THREE.AdditiveBlending
+            //resolution: new THREE.Vector2(window.innerWidth, window.innerHeight)    
         });
 
-        this.pointsMesh = new THREE.Points(this.pointsGeometry, this.pointsMaterial);
-        this.scene.add(this.pointsMesh);
-
+        
         this.positions = new Float32Array(this.maxPoints * 3);
-        this.pointsGeometry.setAttribute(
-            "position",
-            new THREE.BufferAttribute(this.positions, 3)
-        );
-
+        this.linesGeometry.setPositions(this.positions)
+        this.linesGeometry.setDrawRange(0, 0);
+        
+        this.lines = new Line2(this.linesGeometry, this.linesMaterial);
+        this.scene.add(this.lines);
     }
 
     setupOrbitControls() {
@@ -133,21 +143,43 @@ class ThreeJSRenderer {
     }
 
     render() {
+        if (this.points.length < 2) return;
         
+        // Llenar TODOS los puntos en orden correcto
         this.points.forEach((p, i) => {
-            
-            
-            this.positions[i * 3]     = p.x;
+            this.positions[i * 3] = p.x;
             this.positions[i * 3 + 1] = p.y;
             this.positions[i * 3 + 2] = p.z;
         });
-    
-        this.pointsGeometry.setDrawRange(0, this.points.length);
-        this.pointsGeometry.attributes.position.needsUpdate = true;
+        
+        // Crear array con solo los puntos válidos
+        const validPositions = this.positions.slice(0, this.points.length * 3);
+        
+        // Recrear geometría si cambió el número de puntos
 
+        console.log(`Puntos actuales: ${this.points.length}, Último: ${this.lastPointCount}`);
+        
+        const needsRecreation = 
+            this.lastPointCount === 0 || 
+            this.points.length > this.lastPointCount;
+
+        if (needsRecreation) {
+            this.scene.remove(this.lines);
+            this.linesGeometry = new LineGeometry();
+            this.linesGeometry.setPositions(validPositions);
+            this.lines = new Line2(this.linesGeometry, this.linesMaterial);
+            this.scene.add(this.lines);
+        } else {
+            this.linesGeometry.setPositions(validPositions);
+        }
+
+        this.lastPointCount = this.points.length; // ✅ Actualizar SIEMPRE
+        
+        this.lines.computeLineDistances();
+        this.linesMaterial.resolution.set(window.innerWidth, window.innerHeight);
+        
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
-        
     }
 }
 

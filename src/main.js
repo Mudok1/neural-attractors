@@ -18,7 +18,7 @@ class NeuralAttractorsApp {
     }
     
     init() {
-        console.log('Neural Attractors v0.2 - Initializing...');
+        console.log('Neural Attractors v0.2.2 - Initializing...');
         
         this.lorenz.generatePoints(100);
 
