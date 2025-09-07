@@ -5,6 +5,9 @@ import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import { array } from "three/tsl";
 
+import GradientBackground from "../backgrounds/GradientBackground";
+import SmokeBackground from "../backgrounds/SmokeBackground";
+
 class ThreeJSRenderer {
     constructor(containerId) {
         this.rendererType = "3D";
@@ -30,6 +33,12 @@ class ThreeJSRenderer {
         this.centerOffset = new THREE.Vector3(0, 0, 0);
         this.boundsCalculated = false;
 
+        //this.background = new GradientBackground();
+        this.background = new SmokeBackground();
+
+        this._elapsedTime = 0;
+        this._lastTime = performance.now()
+
         this.setupScene();
         this.setupOrbitControls()
 
@@ -43,20 +52,10 @@ class ThreeJSRenderer {
         this.camera.position.set(0, 0, 80);
         this.camera.lookAt(0, 0, 0);
 
-        // Ejes
-        // Puntos
-        // this.pointsGeometry = new THREE.BufferGeometry();
-        // this.pointsMaterial = new THREE.PointsMaterial({
-        //     size: 0.05,
-        //     vertexColors: false,
-        //     color: 0xff0000
-        // });
-
         this.linesGeometry = new LineGeometry();
         this.linesMaterial = new LineMaterial({
-            color: 0xffffff,
             linewidth: 1,
-            //vertexColors: true,
+            vertexColors: true,
             transparent: true,
             opacity: 1,
             blending: THREE.AdditiveBlending
@@ -67,9 +66,50 @@ class ThreeJSRenderer {
         this.positions = new Float32Array(this.maxPoints * 3);
         this.linesGeometry.setPositions(this.positions)
         this.linesGeometry.setDrawRange(0, 0);
+
+        this.colors = new Float32Array(this.maxPoints * 3);
+
+        this.hueOffset = 0;
+        this.hueSpeed  = 0.015;   
+        this.startHue  = 210;     // azul base
+        this.hueRange  = 60;      //  (210–270)
+        this.saturation = 0.8;   
+        this.minLight   = 0.35;   
+        this.maxLight   = 0.7;   
+
+        this._tmpColor = new THREE.Color();
+        this._lastTime = performance.now();
         
         this.lines = new Line2(this.linesGeometry, this.linesMaterial);
         this.scene.add(this.lines);
+
+        //DUPLICADO LINEA GLOW
+
+        this.glowMaterial = new LineMaterial({
+            color: 0x66ccff,          // Azul brillante
+            linewidth: 2.2,           
+            transparent: true,
+            opacity: 0.3,             
+            blending: THREE.AdditiveBlending,
+            vertexColors: false       
+        });
+        this.glowLine = new Line2(this.linesGeometry, this.glowMaterial);
+        this.scene.add(this.glowLine);
+        this.glowMaterial.resolution.set(window.innerWidth, window.innerHeight);
+
+
+        // Segundo glow (aura muy difusa)
+        this.glowMaterial2 = new LineMaterial({
+            color: 0xffffff,
+            linewidth: 5.0,              
+            transparent: true,
+            opacity: 0.08,            
+            blending: THREE.AdditiveBlending,
+            vertexColors: false
+        });
+        this.glowLine2 = new Line2(this.linesGeometry, this.glowMaterial2);
+        this.scene.add(this.glowLine2);
+        this.glowMaterial2.resolution.set(window.innerWidth, window.innerHeight);
     }
 
     setupOrbitControls() {
@@ -124,10 +164,6 @@ class ThreeJSRenderer {
         const scale = 1;
         const vectorPoint = new THREE.Vector3(point3D.x, point3D.y, point3D.z)
         
-        //console.log("Point added:", vectorPoint);
-        //console.log("Total points:", this.points.length);
-
-        // Aplicar centrado y escala
         const centeredPoint = vectorPoint.clone();
         if (this.boundsCalculated) {
             centeredPoint.sub(this.centerOffset);
@@ -145,18 +181,37 @@ class ThreeJSRenderer {
     render() {
         if (this.points.length < 2) return;
         
-        // Llenar TODOS los puntos en orden correcto
         this.points.forEach((p, i) => {
             this.positions[i * 3] = p.x;
             this.positions[i * 3 + 1] = p.y;
             this.positions[i * 3 + 2] = p.z;
-        });
-        
-        // Crear array con solo los puntos válidos
-        const validPositions = this.positions.slice(0, this.points.length * 3);
-        
-        // Recrear geometría si cambió el número de puntos
 
+        });
+
+        const now = performance.now();
+        const dt = (now - this._lastTime) / 1000;
+        this._lastTime = now;
+
+        this.hueOffset = (this.hueOffset + dt * this.hueSpeed) % 1;
+
+        for (let i = 0; i < this.points.length; i++) {
+            const t = (i / (this.points.length - 1) + this.hueOffset) % 1;
+
+            const fade = Math.pow(i / (this.points.length - 1), 1.4);
+            const light = this.minLight + fade * (this.maxLight - this.minLight);
+
+            const hue = this.startHue + t * this.hueRange;
+
+            this._tmpColor.setHSL(hue / 360, this.saturation, light);
+
+            this.colors[i * 3]     = this._tmpColor.r;
+            this.colors[i * 3 + 1] = this._tmpColor.g;
+            this.colors[i * 3 + 2] = this._tmpColor.b;
+        }
+        
+        const validPositions = this.positions.slice(0, this.points.length * 3);
+        const usedColors = this.colors.slice(0, this.points.length * 3);
+        
         console.log(`Puntos actuales: ${this.points.length}, Último: ${this.lastPointCount}`);
         
         const needsRecreation = 
@@ -165,20 +220,44 @@ class ThreeJSRenderer {
 
         if (needsRecreation) {
             this.scene.remove(this.lines);
+            this.scene.remove(this.glowLine);
+            this.scene.remove(this.glowLine2)
+
             this.linesGeometry = new LineGeometry();
             this.linesGeometry.setPositions(validPositions);
+
             this.lines = new Line2(this.linesGeometry, this.linesMaterial);
             this.scene.add(this.lines);
+
+            this.glowLine = new Line2(this.linesGeometry, this.glowMaterial);
+            this.scene.add(this.glowLine);
+
+            this.glowLine2 = new Line2(this.linesGeometry, this.glowMaterial2);
+            this.scene.add(this.glowLine2);
         } else {
             this.linesGeometry.setPositions(validPositions);
         }
 
-        this.lastPointCount = this.points.length; // ✅ Actualizar SIEMPRE
+        this.linesGeometry.setColors(usedColors);
+        this.linesMaterial.opacity = 0.85;
+        this.glowMaterial.opacity = 0.12;   // mitad
+        this.glowMaterial2.opacity = 0.08;
+
+        this.lastPointCount = this.points.length;
         
         this.lines.computeLineDistances();
         this.linesMaterial.resolution.set(window.innerWidth, window.innerHeight);
+        this.glowMaterial.resolution.set(window.innerWidth, window.innerHeight);
+        this.glowMaterial2.resolution.set(window.innerWidth, window.innerHeight);
         
+        this._elapsedTime += dt; // acumulador
+        this.background.material.uniforms.u_time.value = this._elapsedTime;
+
+        this.renderer.autoClear = false;
+        this.renderer.clear();
+
         this.controls.update();
+        this.renderer.render(this.background.scene, this.background.camera)
         this.renderer.render(this.scene, this.camera);
     }
 }

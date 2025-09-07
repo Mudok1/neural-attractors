@@ -1,6 +1,6 @@
 import LorenzAttractor from './math/lorenz.js';
-import Canvas2DRenderer from './visuals/Canvas2DRenderer.js';
-import ThreeJSRenderer from './visuals/ThreeJSRenderer.js';
+import Canvas2DRenderer from './visuals/renderers/Canvas2DRenderer.js';
+import ThreeJSRenderer from './visuals/renderers/ThreeJSRenderer.js';
 
 /**
  * Main application entry point
